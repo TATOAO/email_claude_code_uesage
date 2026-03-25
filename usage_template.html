@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 0; background: #f4f4f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .container { max-width: 600px; margin: 24px auto; }
+  .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* 顶部渐变条 */
+  .top-bar { height: 4px; background: linear-gradient(90deg, #6366f1, #16a34a); }
+
+  /* 过去1小时摘要 */
+  .hour-summary { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; }
+  .hour-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .hour-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  .hour-stat { flex: 1; min-width: 100px; }
+  .hour-stat-value { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+  .hour-stat-label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .hour-stat-change { font-size: 12px; margin-top: 2px; }
+  .change-up { color: #dc2626; }
+  .change-down { color: #16a34a; }
+  .change-same { color: #94a3b8; }
+  .no-activity { font-size: 15px; color: #94a3b8; padding: 12px 0; }
+
+  /* 本周概览 */
+  .week-overview { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; }
+  .week-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .week-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .week-period { font-size: 12px; color: #64748b; font-family: 'SF Mono', Monaco, Consolas, monospace; }
+  .week-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .week-card { flex: 1; min-width: 80px; background: #f8fafc; border-radius: 8px; padding: 12px; text-align: center; }
+  .week-card-value { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+  .week-card-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .progress-bar-bg { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 3px; }
+  .progress-label { font-size: 11px; color: #94a3b8; margin-top: 6px; text-align: right; }
+  .short-quota-line { font-size: 11px; color: #94a3b8; margin-top: 6px; text-align: right; }
+
+  /* 热力图 */
+  .heatmap { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; }
+  .heatmap-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .heatmap-grid { width: 100%; border-collapse: collapse; }
+  .heatmap-grid th { font-size: 10px; color: #94a3b8; font-weight: 400; padding: 2px 0; text-align: center; width: 22px; }
+  .heatmap-grid td { padding: 1px; }
+  .heatmap-grid .day-label { font-size: 11px; color: #64748b; font-weight: 500; text-align: right; padding-right: 8px; width: 36px; white-space: nowrap; }
+  .hm-cell { width: 100%; height: 18px; border-radius: 3px; font-size: 8px; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  .hm-0 { background: #f1f5f9; }
+  .hm-1 { background: #dcfce7; }
+  .hm-2 { background: #86efac; }
+  .hm-3 { background: #4ade80; }
+  .hm-4 { background: #22c55e; }
+  .hm-5 { background: #16a34a; color: #fff; }
+  .hm-6 { background: #15803d; color: #fff; }
+  .hm-today { outline: 2px solid #6366f1; outline-offset: -1px; }
+  .heatmap-legend { display: flex; align-items: center; gap: 4px; margin-top: 10px; justify-content: flex-end; }
+  .heatmap-legend-label { font-size: 10px; color: #94a3b8; }
+  .heatmap-legend-cell { width: 14px; height: 14px; border-radius: 2px; }
+
+  /* 每日统计表 */
+  .daily-table { padding: 20px 24px; }
+  .daily-title { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .dtable { width: 100%; border-collapse: collapse; }
+  .dtable th { font-size: 11px; color: #94a3b8; font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+  .dtable th:not(:first-child) { text-align: right; }
+  .dtable td { font-size: 13px; color: #334155; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+  .dtable td:not(:first-child):not(:nth-child(2)) { text-align: right; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 12px; }
+  .dtable tr.today { background: #f0f0ff; }
+  .dtable tr.total { border-top: 2px solid #e2e8f0; font-weight: 600; }
+  .dtable tr.total td { color: #1a1a2e; border-bottom: none; }
+  .bar-cell { width: 40%; }
+  .bar-bg { height: 16px; background: #f1f5f9; border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #818cf8); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; }
+  .bar-text { font-size: 10px; color: #fff; font-weight: 600; white-space: nowrap; }
+  .bar-text-outside { font-size: 10px; color: #6366f1; font-weight: 600; position: absolute; left: 4px; top: 1px; }
+  .date-col { white-space: nowrap; }
+  .date-weekday { color: #94a3b8; font-size: 11px; }
+
+  /* 注脚 */
+  .footer { padding: 16px 24px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #f0f0f0; }
+  .footer-note { color: #cbd5e1; font-size: 10px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="top-bar"></div>
+
+    <!-- 过去1小时摘要 -->
+    <div class="hour-summary">
+      <div class="hour-title">&#9201; 过去 1 小时 ({{ hour_summary.hour_label }})</div>
+      {% if hour_summary.has_activity %}
+      <div class="hour-stats">
+        <div class="hour-stat">
+          <div class="hour-stat-value">{{ hour_summary.output_fmt }}</div>
+          <div class="hour-stat-label">Output Tokens</div>
+          <div class="hour-stat-change {% if hour_summary.output_delta[0] == 'up' %}change-up{% elif hour_summary.output_delta[0] == 'down' %}change-down{% else %}change-same{% endif %}">{% if hour_summary.output_delta[0] == 'up' %}&#8593; 比上小时 +{{ hour_summary.output_delta[1] }}%{% elif hour_summary.output_delta[0] == 'down' %}&#8595; 比上小时 -{{ hour_summary.output_delta[1] }}%{% else %}&#8596; 持平{% endif %}</div>
+        </div>
+        <div class="hour-stat">
+          <div class="hour-stat-value">{{ hour_summary.input_fmt }}</div>
+          <div class="hour-stat-label">Input Tokens</div>
+          <div class="hour-stat-change {% if hour_summary.input_delta[0] == 'up' %}change-up{% elif hour_summary.input_delta[0] == 'down' %}change-down{% else %}change-same{% endif %}">{% if hour_summary.input_delta[0] == 'up' %}&#8593; 比上小时 +{{ hour_summary.input_delta[1] }}%{% elif hour_summary.input_delta[0] == 'down' %}&#8595; 比上小时 -{{ hour_summary.input_delta[1] }}%{% else %}&#8596; 持平{% endif %}</div>
+        </div>
+        <div class="hour-stat">
+          <div class="hour-stat-value">{{ hour_summary.requests }}</div>
+          <div class="hour-stat-label">请求次数</div>
+          <div class="hour-stat-change {% if hour_summary.requests_delta[0] == 'up' %}change-up{% elif hour_summary.requests_delta[0] == 'down' %}change-down{% else %}change-same{% endif %}">{% if hour_summary.requests_delta[0] == 'up' %}&#8593; 比上小时 +{{ hour_summary.requests_delta[1] }}%{% elif hour_summary.requests_delta[0] == 'down' %}&#8595; 比上小时 -{{ hour_summary.requests_delta[1] }}%{% else %}&#8596; 持平{% endif %}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="no-activity">无活动</div>
+      {% endif %}
+    </div>
+
+    <!-- 本周概览 -->
+    <div class="week-overview">
+      <div class="week-header">
+        <div class="week-title">&#128202; 本周概览</div>
+        <div class="week-period">{{ week_overview.period_start }} &#8594; {{ week_overview.period_end }}</div>
+      </div>
+      <div class="week-cards">
+        <div class="week-card">
+          <div class="week-card-value">{{ week_overview.output_total_fmt }}</div>
+          <div class="week-card-label">Output Tokens</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-value">{{ week_overview.input_total_fmt }}</div>
+          <div class="week-card-label">Input Tokens</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-value">{{ "{:,}".format(week_overview.requests_total) }}</div>
+          <div class="week-card-label">总请求数</div>
+        </div>
+        <div class="week-card">
+          <div class="week-card-value">{{ week_overview.active_days }} / {{ week_overview.total_days }}</div>
+          <div class="week-card-label">活跃天数</div>
+        </div>
+      </div>
+      {% if week_overview.has_quota %}
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: {{ week_overview.quota_pct }}%;"></div>
+      </div>
+      <div class="progress-label">已用: {{ week_overview.output_total_fmt }} / {{ week_overview.quota_fmt }} ({{ week_overview.quota_pct }}%)</div>
+      {% else %}
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: {{ week_overview.time_pct }}%;"></div>
+      </div>
+      <div class="progress-label">周期进度: 第 {{ week_overview.elapsed_days }} 天 / {{ week_overview.total_days }} 天 ({{ week_overview.time_pct }}%)</div>
+      {% endif %}
+      <div class="short-quota-line">近{{ week_overview.short_hours }}小时: {{ week_overview.short_output_fmt }}{% if week_overview.has_short_quota %} / {{ week_overview.short_quota_fmt }} ({{ week_overview.short_quota_pct }}%){% endif %}</div>
+    </div>
+
+    <!-- 热力图 -->
+    <div class="heatmap">
+      <div class="heatmap-title">&#128293; 使用热力图 (Output Tokens)</div>
+      <table class="heatmap-grid" cellspacing="0">
+        <thead>
+          <tr>
+            <th></th>
+            <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+            <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th>
+            <th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th>
+            <th>18</th><th>19</th><th>20</th><th>21</th><th>22</th><th>23</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for day in heatmap %}
+          <tr>
+            <td class="day-label"{% if day.is_today %} style="color: #6366f1; font-weight: 700;"{% elif day.is_future %} style="color: #cbd5e1;"{% endif %}>{{ day.label }}</td>
+            {% for h in day.hours %}
+            <td><div class="hm-cell hm-{{ h.level }}{% if h.is_today_active %} hm-today{% endif %}">{{ h.value }}</div></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="heatmap-legend">
+        <span class="heatmap-legend-label">少</span>
+        <div class="heatmap-legend-cell hm-0"></div>
+        <div class="heatmap-legend-cell" style="background:#dcfce7;"></div>
+        <div class="heatmap-legend-cell" style="background:#86efac;"></div>
+        <div class="heatmap-legend-cell" style="background:#4ade80;"></div>
+        <div class="heatmap-legend-cell" style="background:#22c55e;"></div>
+        <div class="heatmap-legend-cell" style="background:#16a34a;"></div>
+        <div class="heatmap-legend-cell" style="background:#15803d;"></div>
+        <span class="heatmap-legend-label">多</span>
+      </div>
+    </div>
+
+    <!-- 每日统计表 -->
+    <div class="daily-table">
+      <div class="daily-title">&#128200; 每日统计</div>
+      <table class="dtable">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th class="bar-cell">Output Tokens</th>
+            <th>Input</th>
+            <th>请求</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for day in daily_stats %}
+          <tr{% if day.is_today %} class="today"{% endif %}>
+            {% if day.is_today %}
+            <td class="date-col" style="color: #6366f1; font-weight: 600;">{{ day.date }} <span class="date-weekday" style="color: #818cf8;">{{ day.weekday }}</span></td>
+            {% elif day.is_future %}
+            <td class="date-col" style="color: #cbd5e1;">{{ day.date }} <span class="date-weekday" style="color: #e2e8f0;">{{ day.weekday }}</span></td>
+            {% else %}
+            <td class="date-col">{{ day.date }} <span class="date-weekday">{{ day.weekday }}</span></td>
+            {% endif %}
+            <td class="bar-cell">
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: {{ day.bar_pct }}%;">
+                  {% if day.bar_pct > 15 %}<span class="bar-text">{{ day.output_fmt }}</span>{% endif %}
+                </div>
+                {% if day.bar_pct <= 15 %}<span class="bar-text-outside">{% if day.is_future %}-{% else %}{{ day.output_fmt }}{% endif %}</span>{% endif %}
+              </div>
+            </td>
+            {% if day.is_future %}
+            <td style="color: #cbd5e1;">-</td>
+            <td style="color: #cbd5e1;">-</td>
+            {% else %}
+            <td>{{ day.input_fmt }}</td>
+            <td>{{ day.requests }}</td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+          <tr class="total">
+            <td>合计</td>
+            <td class="bar-cell" style="font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 13px;">{{ week_totals.output_fmt }}</td>
+            <td>{{ week_totals.input_fmt }}</td>
+            <td>{{ "{:,}".format(week_totals.requests) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      Claude Code Usage Monitor &middot; 仅本机用量
+      <div class="footer-note">生成于 {{ generated_at }} &middot; 下次重置: {{ next_reset }}</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
